@@ -6,7 +6,7 @@ Source code for "Few-Shot Transfer Learning for Hereditary Retinal Diseases Reco
 In our experiments, we used ResNet50 as the teacher model and ResNet18 as the student model by default. We also integrated many other commonly used models as additional choices in the `models` folder, please modify the individual training files to select them.
 
 ### data
-For confidentiality reasons, we do not provide the target dataset in the experiment, but the BOE dataset and Cell dataset are publicly available for download. For training, the corresponding `dataset` directory needs to be modified in the corresponding dataloader file in the data directory.
+For confidentiality reasons, we do not provide the target dataset in the experiment, but the BOE dataset and Cell dataset are publicly available for download. For training, the corresponding `dataset` directory needs to be modified in the corresponding dataloader files.
 
 ## Usage
 

@@ -13,7 +13,7 @@ from models import model_dict
 from dataset import oct2
 from dataset import boe
 from criterion.criterion import CrossEntropy_SNNL
-from helper.utils import adjust_learning_rate, accuracy, AverageMeter, load_model, freeze, model_name_parser, check_parameters_to_train, part_freeze
+from helper.utils import adjust_learning_rate, load_model, freeze, model_name_parser, check_parameters_to_train, part_freeze
 from helper.loops import train_SNNL as train, validate_SNNL as validate
 
 

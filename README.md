@@ -1,6 +1,6 @@
 ## Introduction
 
-Source code for "Few-Shot Transfer Learning for Hereditary Retinal Diseases Recognition" (MICCAI 2021)
+Source code for "Few-Shot Transfer Learning for Hereditary Retinal Diseases Recognition" (early accepted in MICCAI 2021).
 
 ### model
 In our experiments, we used ResNet50 as the teacher model and ResNet18 as the student model by default. We also integrated many other commonly used models as additional choices in the `models` folder, please modify the individual training files to select them.

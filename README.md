@@ -3,10 +3,10 @@
 Source code for "Few-Shot Transfer Learning for Hereditary Retinal Diseases Recognition" (early accepted in MICCAI 2021).
 
 ### model
-In our experiments, we used ResNet50 as the teacher model and ResNet18 as the student model by default. We also integrated many other commonly used models as additional choices in the `models` folder, please modify the individual training files to select them.
+In our experiments, we used ResNet50 as the teacher model and ResNet18 as the student model by default. We also integrated many other commonly used models as additional choices in the `models` folder, please modify the individual training files if you select them.
 
 ### data
-For confidentiality reasons, we do not provide the target dataset in the experiment, but the BOE dataset and Cell dataset are publicly available for download. For training, the corresponding `dataset` directory needs to be modified in the corresponding dataloader files.
+For confidentiality reasons, we do not provide the target dataset in the experiment, but the [BOE dataset](https://people.duke.edu/~sf59/Srinivasan_BOE_2014_dataset.htm) and [Cell dataset](https://data.mendeley.com/datasets/rscbjbr9sj/3) are publicly available for download. For training, the `dataset` directory needs to be modified in the corresponding dataloader files.
 
 ## Usage
 

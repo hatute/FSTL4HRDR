@@ -32,7 +32,7 @@ def train_vanilla(epoch, train_loader, model, criterion, optimizer, opt):
             output = model(input)
         loss = criterion(output, target)
 
-        acc1 = accuracy(output, target, topk=(1, ))[0]
+        acc1 = accuracy(output, target, topk=(1,))[0]
         losses.update(loss.item(), input.size(0))
         top1.update(acc1[0], input.size(0))
 
@@ -50,17 +50,24 @@ def train_vanilla(epoch, train_loader, model, criterion, optimizer, opt):
 
         # print info
         if idx % opt.print_freq == 0:
-            print('Epoch: [{0}][{1}/{2}]\t'
-                  'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
-                  'Data {data_time.val:.3f} ({data_time.avg:.3f})\t'
-                  'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
-                  'Acc@1 {top1.val:.3f} ({top1.avg:.3f})\t'.format(
-                      epoch, idx, len(train_loader), batch_time=batch_time,
-                      data_time=data_time, loss=losses, top1=top1))
+            print(
+                "Epoch: [{0}][{1}/{2}]\t"
+                "Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t"
+                "Data {data_time.val:.3f} ({data_time.avg:.3f})\t"
+                "Loss {loss.val:.4f} ({loss.avg:.4f})\t"
+                "Acc@1 {top1.val:.3f} ({top1.avg:.3f})\t".format(
+                    epoch,
+                    idx,
+                    len(train_loader),
+                    batch_time=batch_time,
+                    data_time=data_time,
+                    loss=losses,
+                    top1=top1,
+                )
+            )
             sys.stdout.flush()
 
-    print(' * Acc@1 {top1.avg:.3f}'
-          .format(top1=top1))
+    print(" * Acc@1 {top1.avg:.3f}".format(top1=top1))
 
     return top1.avg, losses.avg
 
@@ -88,7 +95,7 @@ def validate_vanilla(val_loader, model, criterion, opt):
             loss = criterion(output, target)
 
             # measure accuracy and record loss
-            acc1 = accuracy(output, target, topk=(1, ))[0]
+            acc1 = accuracy(output, target, topk=(1,))[0]
             losses.update(loss.item(), input.size(0))
             top1.update(acc1[0], input.size(0))
 
@@ -97,17 +104,22 @@ def validate_vanilla(val_loader, model, criterion, opt):
             end = time.time()
 
             if idx % opt.print_freq == 0:
-                print('Test: [{0}/{1}]\t'
-                      'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
-                      'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
-                      'Acc@1 {top1.val:.3f} ({top1.avg:.3f})\t'.format(
-                          idx, len(val_loader), batch_time=batch_time, loss=losses,
-                          top1=top1))
+                print(
+                    "Test: [{0}/{1}]\t"
+                    "Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t"
+                    "Loss {loss.val:.4f} ({loss.avg:.4f})\t"
+                    "Acc@1 {top1.val:.3f} ({top1.avg:.3f})\t".format(
+                        idx,
+                        len(val_loader),
+                        batch_time=batch_time,
+                        loss=losses,
+                        top1=top1,
+                    )
+                )
 
-        print(' * Acc@1 {top1.avg:.3f}'
-              .format(top1=top1))
+        print(" * Acc@1 {top1.avg:.3f}".format(top1=top1))
 
-    return top1.avg,  losses.avg
+    return top1.avg, losses.avg
 
 
 def validate_student(val_loader, model, criterion, opt):
@@ -115,7 +127,7 @@ def validate_student(val_loader, model, criterion, opt):
     batch_time = AverageMeter()
     losses = AverageMeter()
     top1 = AverageMeter()
-    df = pd.DataFrame(columns=['target', 'output', 'path'])
+    df = pd.DataFrame(columns=["target", "output", "path"])
     # switch to evaluate mode
     model.eval()
 
@@ -135,8 +147,10 @@ def validate_student(val_loader, model, criterion, opt):
             tgt = target.cpu().numpy()
             otpt = torch.argmax(output, dim=1).cpu().numpy()
             rst = np.array([tgt, otpt, path]).transpose(1, 0)
-            df = df.append(pd.DataFrame(
-                rst, columns=['target', 'output', 'path']), ignore_index=True)
+            df = df.append(
+                pd.DataFrame(rst, columns=["target", "output", "path"]),
+                ignore_index=True,
+            )
             # print(df)
             # print()
             # exit()
@@ -144,7 +158,7 @@ def validate_student(val_loader, model, criterion, opt):
             loss = criterion(output, target)
 
             # measure accuracy and record loss
-            acc1 = accuracy(output, target, topk=(1, ))[0]
+            acc1 = accuracy(output, target, topk=(1,))[0]
             losses.update(loss.item(), input.size(0))
             top1.update(acc1[0], input.size(0))
 
@@ -153,15 +167,20 @@ def validate_student(val_loader, model, criterion, opt):
             end = time.time()
 
             if idx % opt.print_freq == 0:
-                print('Test: [{0}/{1}]\t'
-                      'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
-                      'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
-                      'Acc@1 {top1.val:.3f} ({top1.avg:.3f})\t'.format(
-                          idx, len(val_loader), batch_time=batch_time, loss=losses,
-                          top1=top1))
+                print(
+                    "Test: [{0}/{1}]\t"
+                    "Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t"
+                    "Loss {loss.val:.4f} ({loss.avg:.4f})\t"
+                    "Acc@1 {top1.val:.3f} ({top1.avg:.3f})\t".format(
+                        idx,
+                        len(val_loader),
+                        batch_time=batch_time,
+                        loss=losses,
+                        top1=top1,
+                    )
+                )
 
-        print(' * Acc@1 {top1.avg:.3f}'
-              .format(top1=top1))
+        print(" * Acc@1 {top1.avg:.3f}".format(top1=top1))
     print(len(df))
     return df
 
@@ -193,7 +212,7 @@ def validate_ST_KD(val_loader, model, criterion, opt):
             loss = criterion(output, target)
 
             # measure accuracy and record loss
-            acc1 = accuracy(output, target, topk=(1, ))[0]
+            acc1 = accuracy(output, target, topk=(1,))[0]
             losses.update(loss.item(), input.size(0))
             top1.update(acc1[0], input.size(0))
 
@@ -202,16 +221,22 @@ def validate_ST_KD(val_loader, model, criterion, opt):
             end = time.time()
 
             if idx % opt.print_freq == 0:
-                print('Test: [{0}/{1}]\t'
-                      'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
-                      'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
-                      'Acc@1 {top1.val:.3f} ({top1.avg:.3f})\t'.format(
-                          idx, len(val_loader), batch_time=batch_time, loss=losses,
-                          top1=top1))
+                print(
+                    "Test: [{0}/{1}]\t"
+                    "Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t"
+                    "Loss {loss.val:.4f} ({loss.avg:.4f})\t"
+                    "Acc@1 {top1.val:.3f} ({top1.avg:.3f})\t".format(
+                        idx,
+                        len(val_loader),
+                        batch_time=batch_time,
+                        loss=losses,
+                        top1=top1,
+                    )
+                )
 
-        print(' * Acc@1 {top1.avg:.3f} '.format(top1=top1))
+        print(" * Acc@1 {top1.avg:.3f} ".format(top1=top1))
 
-    return top1.avg,  losses.avg
+    return top1.avg, losses.avg
 
 
 def train_ST_KD(epoch, train_loader, module_list, criterion_list, optimizer, opt):
@@ -265,7 +290,7 @@ def train_ST_KD(epoch, train_loader, module_list, criterion_list, optimizer, opt
 
         loss = opt.alpha * loss_cls + opt.beta * loss_div
 
-        acc1 = accuracy(logit_s, target, topk=(1, ))[0]
+        acc1 = accuracy(logit_s, target, topk=(1,))[0]
         losses.update(loss.item(), input.size(0))
         top1.update(acc1[0], input.size(0))
 
@@ -280,22 +305,31 @@ def train_ST_KD(epoch, train_loader, module_list, criterion_list, optimizer, opt
 
         # print info
         if idx % opt.print_freq == 0:
-            print('Epoch: [{0}][{1}/{2}]\t'
-                  'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
-                  'Data {data_time.val:.3f} ({data_time.avg:.3f})\t'
-                  'Loss {loss.val:.4f} ({loss.avg:.4f},{l_cls:.3f}+{l_div:.3f})\t'
-                  'Acc@1 {top1.val:.3f} ({top1.avg:.3f})\t'.format(
-                      epoch, idx, len(train_loader), batch_time=batch_time,
-                      data_time=data_time, loss=losses, l_cls=loss_cls, l_div=loss_div, top1=top1))
+            print(
+                "Epoch: [{0}][{1}/{2}]\t"
+                "Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t"
+                "Data {data_time.val:.3f} ({data_time.avg:.3f})\t"
+                "Loss {loss.val:.4f} ({loss.avg:.4f},{l_cls:.3f}+{l_div:.3f})\t"
+                "Acc@1 {top1.val:.3f} ({top1.avg:.3f})\t".format(
+                    epoch,
+                    idx,
+                    len(train_loader),
+                    batch_time=batch_time,
+                    data_time=data_time,
+                    loss=losses,
+                    l_cls=loss_cls,
+                    l_div=loss_div,
+                    top1=top1,
+                )
+            )
             sys.stdout.flush()
 
-    print(' * Acc@1 {top1.avg:.3f} '
-          .format(top1=top1))
+    print(" * Acc@1 {top1.avg:.3f} ".format(top1=top1))
 
     return top1.avg, losses.avg
 
 
-def train_SNNL(epoch, train_loader, model, criterion, optimizer, opt):
+def train_SNNL(epoch, train_loader, model, criterion, optimizer, device, opt):
     """vanilla training"""
     model.train()
 
@@ -307,12 +341,10 @@ def train_SNNL(epoch, train_loader, model, criterion, optimizer, opt):
 
     end = time.time()
     for idx, (input, target) in enumerate(train_loader):
-        data_time.update(time.time() - end)
-
         input = input.float()
-        if torch.cuda.is_available():
-            input = input.cuda()
-            target = target.cuda()
+        input = input.to(device)
+        target = target.to(device)
+        data_time.update(time.time() - end)
 
         # ===================forward=====================
         output, x_rep = model(input)
@@ -343,17 +375,24 @@ def train_SNNL(epoch, train_loader, model, criterion, optimizer, opt):
         # print(opt.print_freq)
         # print info
         if idx % opt.print_freq == 0:
-            print('Epoch: [{0}][{1}/{2}]\t'
-                  'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
-                  'Data {data_time.val:.3f} ({data_time.avg:.3f})\t'
-                  'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
-                  'Acc@1 {top1.val:.3f} ({top1.avg:.3f})'.format(
-                      epoch, idx, len(train_loader), batch_time=batch_time,
-                      data_time=data_time, loss=losses, top1=top1))
+            print(
+                "Epoch: [{0}][{1}/{2}]\t"
+                "Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t"
+                "Data {data_time.val:.3f} ({data_time.avg:.3f})\t"
+                "Loss {loss.val:.4f} ({loss.avg:.4f})\t"
+                "Acc@1 {top1.val:.3f} ({top1.avg:.3f})".format(
+                    epoch,
+                    idx,
+                    len(train_loader),
+                    batch_time=batch_time,
+                    data_time=data_time,
+                    loss=losses,
+                    top1=top1,
+                )
+            )
             sys.stdout.flush()
 
-    print(' * Acc@1 {top1.avg:.3f}'
-          .format(top1=top1))
+    print(" * Acc@1 {top1.avg:.3f}".format(top1=top1))
     #
     return top1.avg, losses.avg
 
@@ -402,14 +441,20 @@ def validate_SNNL(val_loader, model, criterion, opt):
             #         top1=top1, top3=top3))
 
             if idx % opt.print_freq == 0:
-                print('Test: [{0}/{1}]\t'
-                      'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
-                      'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
-                      'Acc@1 {top1.val:.3f} ({top1.avg:.3f})'.format(
-                          idx, len(val_loader), batch_time=batch_time, loss=losses,
-                          top1=top1))
+                print(
+                    "Test: [{0}/{1}]\t"
+                    "Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t"
+                    "Loss {loss.val:.4f} ({loss.avg:.4f})\t"
+                    "Acc@1 {top1.val:.3f} ({top1.avg:.3f})".format(
+                        idx,
+                        len(val_loader),
+                        batch_time=batch_time,
+                        loss=losses,
+                        top1=top1,
+                    )
+                )
 
-        print(' * Acc@1 {top1.avg:.3f}'
-              .format(top1=top1))
+        print(" * Acc@1 {top1.avg:.3f}".format(top1=top1))
 
     return top1.avg, losses.avg
+

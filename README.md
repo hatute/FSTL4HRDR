@@ -27,11 +27,12 @@ For confidentiality reasons, we do not provide the target dataset in the experim
 
 ### 0. Preprocess the OCT images (optional)
 
-`python3 preprocess.py --path *path to dataset*`
+`python3 preprocess.py --path <path to dataset>`  
+*[OpenBLAS](https://github.com/xianyi/OpenBLAS) is optional to install for accelerating the calculation.
 
 ### 1. train projector with SNNL by auxiliary dataset
 
-`python3 train_projector.py -T 10 -a -50 --info "trial 1"`
+`python3 train_projector.py -T 50 -a -5.0 --info "trial 1"`
 
 ### 2.transfer learning for teacher model by target dataset
 

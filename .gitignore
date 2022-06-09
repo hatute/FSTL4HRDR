@@ -2,10 +2,13 @@
 __pycache__/
 *.py[cod]
 *$py.class
-
+data/*
+save/
+.idea/
+.conda_env
 # C extensions
 *.so
-
+playground/
 # Distribution / packaging
 .Python
 build/

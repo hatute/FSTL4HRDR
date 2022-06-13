@@ -89,7 +89,7 @@ def parse_option():
     parser.add_argument(
         "-a", "--alpha", type=float, default=-5.0, help="alpha multiplier"
     )
-    parser.add_argument("-c", "--check-model", default=False,  action="store_true")
+    parser.add_argument("-c", "--check-model", default=False, action="store_true")
     parser.add_argument("-t", "--trial", type=int, default=0, help="the experiment id")
     parser.add_argument("--parallel-training", type=bool, default=False)
 
@@ -164,10 +164,11 @@ def main():  # sourcery skip: use-fstring-for-formatting
     logger = tb_logger.Logger(logdir=opt.tb_folder, flush_secs=2)
 
     # routine
+    print("==> Start training...")
+    start_time = time.time()
     for epoch in range(1, opt.epochs + 1):
 
         adjust_learning_rate(epoch, opt, optimizer)
-        print("==> training...")
 
         now_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         print(now_time)
@@ -218,7 +219,8 @@ def main():  # sourcery skip: use-fstring-for-formatting
     # This best accuracy is only for printing purpose.
     # The results reported in the paper/README is from the last epoch.
     print("best accuracy:", best_acc)
-
+    end_time = time.time()
+    print(time.strftime("%Hh:%Mm:%Ss", time.gmtime(end_time - start_time)))
     # save model
     state = {
         "opt": opt,

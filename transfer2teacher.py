@@ -1,27 +1,26 @@
-import os
 import argparse
+import os
 import socket
 import time
 
 import tensorboard_logger as tb_logger
 import torch
-import torch.optim as optim
-import torch.nn as nn
 import torch.backends.cudnn as cudnn
+import torch.nn as nn
+import torch.optim as optim
 
-from models import model_dict
-from dataset import oct2
-from dataset import boe
 from criterion.criterion import CrossEntropy_SNNL
+from dataset import boe
+from dataset import oct2
+from helper.loops import train_SNNL as train, validate_SNNL as validate
 from helper.utils import (
     adjust_learning_rate,
     load_model,
     freeze,
     model_name_parser,
-    check_parameters_to_train,
     part_freeze,
 )
-from helper.loops import train_SNNL as train, validate_SNNL as validate
+from models import model_dict
 
 
 def parse_option():
@@ -95,7 +94,7 @@ def parse_option():
         "--d_rep", type=int, default=128, help="dimension of representation layer"
     )
     parser.add_argument(
-        "--dataset", type=str, default="boe", choices=["oct2", "boe"], help="dataset"
+        "--dataset", type=str, default="oct2", choices=["oct2", "boe"], help="dataset"
     )
     parser.add_argument(
         "-T", "--temperature", type=float, default=50, help="temperature"
@@ -214,22 +213,26 @@ def main():
 
     criterion = CrossEntropy_SNNL(T=opt.temperature, alpha=opt.alpha)
 
-    if torch.cuda.is_available():
-        model = model.cuda()
-        criterion = criterion.cuda()
-        cudnn.benchmark = True
+    use_cuda = torch.cuda.is_available()
+    device = torch.device("cuda:0" if use_cuda else "cpu")
+    assert torch.cuda.is_available(), "Not with GPU"
+
+    model = model.to(device)
+    criterion = criterion.to(device)
+    cudnn.benchmark = True
 
     if opt.parallel_training:
         model = nn.DataParallel(model)
 
     # routine
-    print("==> training...")
+    print("==> Start training...")
+    start_time = time.time()
     for epoch in range(1, opt.epochs + 1):
 
         adjust_learning_rate(epoch, opt, optimizer)
         time1 = time.time()
         train_acc, train_loss = train(
-            epoch, train_loader, model, criterion, optimizer, opt
+            epoch, train_loader, model, criterion, optimizer, device, opt,
         )
         time2 = time.time()
         print("epoch {}, total time {:.2f}".format(epoch, time2 - time1))
@@ -273,7 +276,8 @@ def main():
     # This best accuracy is only for printing purpose.
     # The results reported in the paper/README is from the last epoch.
     print("best accuracy:", best_acc)
-
+    end_time = time.time()
+    print(time.strftime("%Hh:%Mm:%Ss", time.gmtime(end_time - start_time)))
     # save model
     state = {
         "opt": opt,

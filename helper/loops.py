@@ -458,3 +458,24 @@ def validate_SNNL(val_loader, model, criterion, opt):
 
     return top1.avg, losses.avg
 
+
+def validate_return_raw_4CM(val_loader, model):
+    """validation"""
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    target_c = []
+    output_c = []
+    # switch to evaluate mode
+    model.eval()
+
+    with torch.no_grad():
+        for input, target in val_loader:
+            input = input.float()
+            # print(target.shape)
+            target_c.extend(target.cpu().numpy())
+            if torch.cuda.is_available():
+                input = input.to(device)
+
+            output = model(input)
+            output_c.extend(output.cpu().numpy().argmax(axis=1))
+
+    return target_c, output_c

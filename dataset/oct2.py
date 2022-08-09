@@ -8,26 +8,27 @@ from torchvision import transforms
 from sklearn.model_selection import KFold
 import numpy as np
 
-'''
+"""
 (mean:[0.2951538], std:[0.1537334])
-'''
+"""
 
 
 def get_imgs_paths(path):
     imgs_path = []
     for root, dirs, files in os.walk(path):
         for file in files:
-            if file.endswith('jpeg') or file.endswith('jpg') or file.endswith('png'):
+            if file.endswith("jpeg") or file.endswith("jpg") or file.endswith("png"):
                 imgs_path.append(os.path.join(root, file))
     # imgs_path = [os.path.join(path, i) for i in imgs_path if i.endswith('jpeg') ]
     # print(imgs_path[0])
-    assert len(imgs_path) > 0, 'imgs_path set is void'
+    assert len(imgs_path) > 0, "imgs_path set is void"
     return imgs_path
 
 
 def get_and_split(root_path, percent, shuffle=False):
-    dirs = [i for i in os.listdir(root_path) if os.path.isdir(
-        os.path.join(root_path, i))]
+    dirs = [
+        i for i in os.listdir(root_path) if os.path.isdir(os.path.join(root_path, i))
+    ]
     part_A = []
     part_B = []
     if shuffle:
@@ -90,19 +91,19 @@ class OCT2_Dataset(Dataset):
 
         img, target = None, None
 
-        if 'central_preprocessed' == classes:
+        if classes == "central_preprocessed":
             img = Image.open(path)
             target = 0
-        elif 'excluded central_preprocessed' == classes:
+        elif classes == "excluded central_preprocessed":
             img = Image.open(path)
             target = 1
-        elif 'extensive_preprocessed' == classes:
+        elif classes == "extensive_preprocessed":
             img = Image.open(path)
             target = 2
-        elif 'normal_preprocessed' == classes:
+        elif classes == "normal_preprocessed":
             img = Image.open(path)
             target = 3
-        elif 'control_preprocessed' == classes:
+        elif classes == "control_preprocessed":
             img = Image.open(path)
             target = 4
         else:
@@ -113,21 +114,35 @@ class OCT2_Dataset(Dataset):
 
         target = torch.tensor(target)
 
-        assert img is not None and target is not None, 'img and tgt is None'
+        assert img is not None and target is not None, "img and tgt is None"
 
-        if self.need_idx:
-            return img, target, path
-        else:
-            return img, target
+        return (img, target, path) if self.need_idx else (img, target)
 
 
-def get_oct2_dataloaders(data_roots=("/data/local/siwei/workspace/FSTL4HRDR/data/preprocessed/Zeiss_preprocessed",
-                                     "/data/local/siwei/workspace/FSTL4HRDR/data/preprocessed/OCT2_preprocessed",
-                                     "/data/local/siwei/workspace/FSTL4HRDR/data/preprocessed/Heidelberg9_preprocessed"),
-                         batch_size=128, num_workers=4, need_idx=False, shuffle=True, verbose=False):
-    """
-    """
-    train_paths, test_paths = get_data_folder(data_roots=data_roots, test_percent=0.15)
+def get_oct2_dataloaders(
+    c_dataset,
+    batch_size=128,
+    num_workers=4,
+    need_idx=False,
+    shuffle=True,
+    verbose=False,
+):
+    """ """
+    datasets = {
+        "zs": (
+            "/data/local/siwei/workspace/FSTL4HRDR/data/preprocessed/Zeiss_preprocessed",
+        ),
+        "oct2": (
+            "/data/local/siwei/workspace/FSTL4HRDR/data/preprocessed/OCT2_preprocessed",
+        ),
+        "hd": (
+            "/data/local/siwei/workspace/FSTL4HRDR/data/preprocessed/Heidelberg9_preprocessed",
+        ),
+    }
+
+    train_paths, test_paths = get_data_folder(
+        data_roots=datasets[c_dataset], test_percent=0.15
+    )
 
     size = 224
 
@@ -138,7 +153,8 @@ def get_oct2_dataloaders(data_roots=("/data/local/siwei/workspace/FSTL4HRDR/data
             transforms.RandomResizedCrop((size, size), (0.7, 1)),
             transforms.ToTensor(),
             # transforms.Normalize((0.2951538), (0.1537334)),
-        ])
+        ]
+    )
 
     test_transform = transforms.Compose(
         [
@@ -146,7 +162,8 @@ def get_oct2_dataloaders(data_roots=("/data/local/siwei/workspace/FSTL4HRDR/data
             transforms.Resize((size, size)),
             transforms.ToTensor(),
             # transforms.Normalize((0.2951538), (0.1537334)),
-        ])
+        ]
+    )
 
     train_set = OCT2_Dataset(train_paths, train_transform, need_idx=need_idx)
     test_set = OCT2_Dataset(test_paths, test_transform, need_idx=need_idx)
@@ -154,9 +171,11 @@ def get_oct2_dataloaders(data_roots=("/data/local/siwei/workspace/FSTL4HRDR/data
         print(f"len of train is {len(train_set)}")
         print(f"len of test is {len(test_set)}")
     train_loader = DataLoader(
-        train_set, batch_size=batch_size, shuffle=shuffle, num_workers=num_workers)
+        train_set, batch_size=batch_size, shuffle=shuffle, num_workers=num_workers
+    )
     test_loader = DataLoader(
-        test_set, batch_size=batch_size, shuffle=shuffle, num_workers=num_workers)
+        test_set, batch_size=batch_size, shuffle=shuffle, num_workers=num_workers
+    )
     # print(train_loader.dataset)
     # print(test_loader.dataset)
     assert len(train_set) > len(test_set)
@@ -164,7 +183,15 @@ def get_oct2_dataloaders(data_roots=("/data/local/siwei/workspace/FSTL4HRDR/data
     return train_loader, test_loader
 
 
-def get_kfold_dataloader(k, c_dataset, batch_size=128, num_workers=4, need_idx=False, shuffle=True, verbose=False):
+def get_kfold_dataloader(
+    k,
+    c_dataset,
+    batch_size=128,
+    num_workers=4,
+    need_idx=False,
+    shuffle=True,
+    verbose=False,
+):
     kfold = KFold(n_splits=k, shuffle=True)
 
     size = 224
@@ -176,7 +203,8 @@ def get_kfold_dataloader(k, c_dataset, batch_size=128, num_workers=4, need_idx=F
             transforms.RandomResizedCrop((size, size), (0.7, 1)),
             transforms.ToTensor(),
             # transforms.Normalize((0.2951538), (0.1537334)),
-        ])
+        ]
+    )
 
     test_transform = transforms.Compose(
         [
@@ -184,16 +212,17 @@ def get_kfold_dataloader(k, c_dataset, batch_size=128, num_workers=4, need_idx=F
             transforms.Resize((size, size)),
             transforms.ToTensor(),
             # transforms.Normalize((0.2951538), (0.1537334)),
-        ])
+        ]
+    )
     zs = "/data/local/siwei/workspace/FSTL4HRDR/data/preprocessed/Zeiss_preprocessed"
     hb = "/data/local/siwei/workspace/FSTL4HRDR/data/preprocessed/Heidelberg9_preprocessed"
 
     all_path = None
     path_kfold = None
-    if c_dataset == 'zs':
+    if c_dataset == "zs":
         all_path = get_data_folder(data_roots=(zs,), test_percent=0)
         path_kfold = kfold.split(all_path)
-    elif c_dataset == 'hb':
+    elif c_dataset == "hb":
         all_path = get_data_folder(data_roots=(hb,), test_percent=0)
         path_kfold = kfold.split(all_path)
 
@@ -210,20 +239,31 @@ def get_kfold_dataloader(k, c_dataset, batch_size=128, num_workers=4, need_idx=F
             print(f"test len: {len(test_set)}")
             # exit()
         train_loader = DataLoader(
-            train_set, batch_size=batch_size, shuffle=shuffle, num_workers=num_workers)
+            train_set, batch_size=batch_size, shuffle=shuffle, num_workers=num_workers
+        )
         test_loader = DataLoader(
-            test_set, batch_size=batch_size, shuffle=shuffle, num_workers=num_workers)
+            test_set, batch_size=batch_size, shuffle=shuffle, num_workers=num_workers
+        )
 
         assert len(train_set) > len(test_set)
-        print(f"fold {idx} train_len:{len(train_set)}\nfold {idx} test_len :{len(test_set)}\n")
+        print(
+            f"fold {idx} train_len:{len(train_set)}\nfold {idx} test_len :{len(test_set)}\n"
+        )
         dataloader_set.append([train_loader, test_loader])
     assert (len(dataloader_set)) == k
     return dataloader_set
 
 
-def get_hybird_dataloaders(c_train, c_test, batch_size=128, num_workers=4, need_idx=False, shuffle=True, verbose=False):
-    """
-    """
+def get_hybird_dataloaders(
+    c_train,
+    c_test,
+    batch_size=128,
+    num_workers=4,
+    need_idx=False,
+    shuffle=True,
+    verbose=False,
+):
+    """ """
     zs = "/data/local/siwei/workspace/FSTL4HRDR/data/preprocessed/Zeiss_preprocessed"
     hb = "/data/local/siwei/workspace/FSTL4HRDR/data/preprocessed/Heidelberg9_preprocessed"
 
@@ -248,7 +288,8 @@ def get_hybird_dataloaders(c_train, c_test, batch_size=128, num_workers=4, need_
             transforms.RandomResizedCrop((size, size), (0.7, 1)),
             transforms.ToTensor(),
             # transforms.Normalize((0.2951538), (0.1537334)),
-        ])
+        ]
+    )
 
     test_transform = transforms.Compose(
         [
@@ -256,7 +297,8 @@ def get_hybird_dataloaders(c_train, c_test, batch_size=128, num_workers=4, need_
             transforms.Resize((size, size)),
             transforms.ToTensor(),
             # transforms.Normalize((0.2951538), (0.1537334)),
-        ])
+        ]
+    )
 
     train_set = OCT2_Dataset(train_paths, train_transform, need_idx=need_idx)
     test_set = OCT2_Dataset(test_paths, test_transform, need_idx=need_idx)
@@ -264,9 +306,11 @@ def get_hybird_dataloaders(c_train, c_test, batch_size=128, num_workers=4, need_
         print(f"len of train is {len(train_set)}")
         print(f"len of test is {len(test_set)}")
     train_loader = DataLoader(
-        train_set, batch_size=batch_size, shuffle=shuffle, num_workers=num_workers)
+        train_set, batch_size=batch_size, shuffle=shuffle, num_workers=num_workers
+    )
     test_loader = DataLoader(
-        test_set, batch_size=batch_size, shuffle=shuffle, num_workers=num_workers)
+        test_set, batch_size=batch_size, shuffle=shuffle, num_workers=num_workers
+    )
     # print(train_loader.dataset)
     # print(test_loader.dataset)
     # assert len(train_set) > len(test_set)
@@ -274,7 +318,7 @@ def get_hybird_dataloaders(c_train, c_test, batch_size=128, num_workers=4, need_
     return train_loader, test_loader
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # dataset = datasets.ImageFolder("../../sample/oct2_c5",
     #                                transforms.Compose(
     #                                    [transforms.Grayscale(), transforms.Resize((224, 224)), transforms.ToTensor()]))
@@ -284,4 +328,4 @@ if __name__ == '__main__':
 
     # get_kfold_dataloader(5, 'zs')
 
-    get_hybird_dataloaders("zs", 'hb')
+    get_hybird_dataloaders("zs", "hb")

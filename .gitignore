@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 data/*
 save/
+expr_record/
 .idea/
 .conda_env
 # C extensions

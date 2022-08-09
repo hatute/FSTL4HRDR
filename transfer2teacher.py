@@ -94,7 +94,11 @@ def parse_option():
         "--d_rep", type=int, default=128, help="dimension of representation layer"
     )
     parser.add_argument(
-        "--dataset", type=str, default="oct2", choices=["oct2", "boe"], help="dataset"
+        "--dataset",
+        type=str,
+        # default="oct2",
+        choices=["oct2", "boe", "zs", "hd"],
+        help="dataset",
     )
     parser.add_argument(
         "-T", "--temperature", type=float, default=50, help="temperature"
@@ -159,9 +163,11 @@ def main():
     logger = tb_logger.Logger(logdir=opt.tb_folder, flush_secs=2)
 
     # dataloader
-    if opt.dataset == "oct2":
+    if opt.dataset in {"oct2", "hd", "zs"}:
         train_loader, val_loader = oct2.get_oct2_dataloaders(
-            batch_size=opt.batch_size, num_workers=opt.num_workers
+            c_dataset=opt.dataset,
+            batch_size=opt.batch_size,
+            num_workers=opt.num_workers,
         )
         n_classes = 5
 
@@ -232,7 +238,13 @@ def main():
         adjust_learning_rate(epoch, opt, optimizer)
         time1 = time.time()
         train_acc, train_loss = train(
-            epoch, train_loader, model, criterion, optimizer, device, opt,
+            epoch,
+            train_loader,
+            model,
+            criterion,
+            optimizer,
+            device,
+            opt,
         )
         time2 = time.time()
         print("epoch {}, total time {:.2f}".format(epoch, time2 - time1))

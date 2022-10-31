@@ -11,13 +11,18 @@ from PIL import Image
 """
 
 
-def get_data_folder(path):
+def get_data_folder(path, raw=False):
     """
     return server-dependent path to store the data
     """
     data_folder = path
-    train_folder = os.path.join(data_folder, "train_preprocessed")
-    test_folder = os.path.join(data_folder, "test_preprocessed")
+    train_suffix = "train"
+    test_suffix = "test"
+    if not raw:
+        train_suffix += "_preprocessed"
+        test_suffix += "_preprocessed"
+    train_folder = os.path.join(data_folder, train_suffix)
+    test_folder = os.path.join(data_folder, test_suffix)
     return train_folder, test_folder
 
 
@@ -35,17 +40,18 @@ def get_mean_std(dataset, ratio=0.1):
 
 
 def get_kaggle_dataloaders(
-    kaggle_path="./data/preprocessed/Kaggle_4c",
-    batch_size=128,
-    num_workers=4,
-    verbose=False,
+        kaggle_path="./data/preprocessed/Kaggle_4c",
+        batch_size=128,
+        num_workers=4,
+        verbose=False,
+        raw = False
 ):
     """
     kaggle
     Train:CNV(36872),DME(11251), DRUSEN(8531), NORMAL(50750)
     Test: 250/class
     """
-    train_folder, test_folder = get_data_folder(kaggle_path)
+    train_folder, test_folder = get_data_folder(kaggle_path,raw=raw)
 
     train_transform = transforms.Compose(
         [
@@ -90,6 +96,5 @@ def get_kaggle_dataloaders(
 
 if __name__ == "__main__":
     train_loader, test_loader = get_kaggle_dataloaders(
-        "../data/preprocessed/Kaggle_4c", verbose=True
+        "../data/raw/Kaggle_4c", verbose=True,raw =True
     )
-

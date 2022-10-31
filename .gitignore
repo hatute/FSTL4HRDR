@@ -137,3 +137,4 @@ dmypy.json
 .history
 .vscode
 *.tmp
+*.xlsx

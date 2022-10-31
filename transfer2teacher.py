@@ -164,7 +164,7 @@ def main():
 
     # dataloader
     if opt.dataset in {"oct2", "hd", "zs"}:
-        train_loader, val_loader = oct2.get_oct2_dataloaders(
+        train_loader, val_loader = oct2.get_oct2_dataloaders_sub(
             c_dataset=opt.dataset,
             batch_size=opt.batch_size,
             num_workers=opt.num_workers,

@@ -172,7 +172,7 @@ def reset_weights(m):
             layer.reset_parameters()
 
 
-def main(to=criterion_list.to(device)):
+def main():
     torch.manual_seed(42)
 
     opt = student_parse_option()
@@ -204,7 +204,9 @@ def main(to=criterion_list.to(device)):
     trainable_list = nn.ModuleList([])
     trainable_list.append(model_s)
 
-    criterion_cls = nn.CrossEntropyLoss()
+    class_weight = oct2.get_class_weight(opt.train_dataset)
+    print(f">>> class weight:{class_weight}")
+    criterion_cls = nn.CrossEntropyLoss(weight=class_weight)
     criterion_div = DistillKL(opt.kd_T)
 
     criterion_list = nn.ModuleList([])
@@ -225,7 +227,7 @@ def main(to=criterion_list.to(device)):
     assert torch.cuda.is_available(), "Not with GPU"
 
     module_list = module_list.to(device)
-    criterion_list = to
+    criterion_list = criterion_list.to(device)
     cudnn.benchmark = True
 
     if opt.parallel_training:

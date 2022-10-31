@@ -459,23 +459,37 @@ def validate_SNNL(val_loader, model, criterion, opt):
     return top1.avg, losses.avg
 
 
-def validate_return_raw_4CM(val_loader, model):
+def validate_return_raw_4CM(val_loader, model, need_idx=False):
     """validation"""
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     target_c = []
     output_c = []
     # switch to evaluate mode
     model.eval()
+    path_idx = []
 
     with torch.no_grad():
-        for input, target in val_loader:
-            input = input.float()
-            # print(target.shape)
-            target_c.extend(target.cpu().numpy())
-            if torch.cuda.is_available():
-                input = input.to(device)
+        if not need_idx:
+            for input, target in val_loader:
+                input = input.float()
+                # print(target.shape)
+                target_c.extend(target.cpu().numpy())
+                if torch.cuda.is_available():
+                    input = input.to(device)
 
-            output = model(input)
-            output_c.extend(output.cpu().numpy().argmax(axis=1))
+                output = model(input)
+                output_c.extend(output.cpu().numpy().argmax(axis=1))
+            return target_c, output_c
+        else:
+            for input, target, path in val_loader:
+                path_idx.extend(path)
+                input = input.float()
+                # print(target.shape)
+                target_c.extend(target.cpu().numpy())
+                if torch.cuda.is_available():
+                    input = input.to(device)
 
-    return target_c, output_c
+                output = model(input)
+                output_c.extend(output.cpu().numpy().argmax(axis=1))
+            assert len(target_c) == len(output_c) == len(path_idx)
+            return target_c, output_c, path_idx

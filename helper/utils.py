@@ -3,6 +3,10 @@ import numpy as np
 import os
 import argparse
 import socket
+import pathlib
+import re
+import random
+from tqdm import tqdm
 
 
 def adjust_learning_rate_new(epoch, optimizer, LUT):
@@ -99,3 +103,68 @@ def part_freeze(model, start_index):
     for idx, (name, params) in enumerate(model.named_parameters()):
         if idx < start_index:
             params.requires_grad = False
+
+
+def generate_subjects_set(root: str) -> dict:
+    path = pathlib.Path(root)
+    num_file = 0
+    sub = {}
+    # jpg+jpeg = 2317 + 1*xlsx
+    for p in path.rglob("*.j*"):
+        if p.is_file():
+            # print(p.name)
+            split = re.split("_", p.name)
+            format = re.split("\.", p.name)[-1]
+            key_sub = None
+            if format == 'jpeg':
+                key_sub = "".join(split[:2])
+            elif format == "jpg":
+                key_sub = "".join(split[:1])
+            else:
+                print(format)
+
+            if key_sub not in sub:
+                sub[key_sub] = []
+            sub[key_sub].append(str(p.resolve()))
+
+            num_file += 1
+
+    # print(f"# of file:{num_file}")
+
+    return sub
+
+
+def train_test_split_by_subject(root: str, test_ratio) -> (list, list):
+    subjects_set = generate_subjects_set(root)
+    total_len = 0
+    for i in subjects_set:
+        total_len += len(subjects_set[i])
+
+    test_length = int(total_len * test_ratio)
+    tolerance = 10
+    now_length = 0
+    test = []
+    train = []
+    while now_length < test_length + tolerance:
+        try:
+            rand_choice = random.choice(list(subjects_set.keys()))
+        except IndexError:
+            print(total_len, test_length, now_length)
+            print(list(subjects_set.keys()))
+            exit()
+        else:
+            now = subjects_set.pop(rand_choice)
+            # print(now)
+            test.extend(now)
+            now_length += len(now)
+    _ = [train.extend(subjects_set[i]) for i in subjects_set]
+    # print(len(train),len(test),len(train)+len(test),total_len)
+    assert len(train) + len(test) == total_len
+    return train, test
+
+
+if __name__ == '__main__':
+    # test
+    for _ in tqdm(range(1)):
+        subjects = generate_subjects_set("../data/raw/OCT4")
+        train_test_split_by_subject(subjects, 0.3)

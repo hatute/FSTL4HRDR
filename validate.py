@@ -249,6 +249,218 @@ def main():
             optimizer=optimizer,
             logger=logger,
         )
+def k_fold(opt, module_list, criterion_list, optimizer, logger):
+    k = opt.k_fold
+    results = {}
+    criterion_cls = criterion_list[0]
+    # add timer
+    print("==> Start training...")
+    start_time = time.time()
+
+    for idx, (train_loader, val_loader) in enumerate(
+            oct2.get_kfold_dataloader(
+                k=k,
+                c_dataset=opt.train_dataset,
+                batch_size=opt.batch_size,
+                num_workers=opt.num_workers,
+            )
+    ):
+
+        val_teacher(
+            val_loader=val_loader,
+            model_t=module_list[-1],
+            criterion_cls=criterion_cls,
+            opt=opt,
+        )
+
+        print(f"FOLD {idx + 1}/{k}")
+        print("--------------------------------")
+        # Init the neural network
+        module_list[0].apply(reset_weights)
+        best_acc = 0
+        for epoch in range(1, opt.epochs + 1):
+
+            adjust_learning_rate(epoch, opt, optimizer)
+
+            now_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+            print(now_time)
+
+            time1 = time.time()
+            train_acc, train_loss = train(
+                epoch, train_loader, module_list, criterion_list, optimizer, opt
+            )
+            time2 = time.time()
+            print("epoch {}, total time {:.2f}".format(epoch, (time2 - time1) / 60))
+
+            logger.log_value(f"F{idx + 1}_train_acc", train_acc, epoch)
+            logger.log_value(f"F{idx + 1}_train_loss", train_loss, epoch)
+
+            test_acc, test_loss = validate(
+                val_loader, module_list[0], criterion_cls, opt
+            )
+
+            logger.log_value(f"F{idx + 1}_test_acc", test_acc, epoch)
+            logger.log_value(f"F{idx + 1}_test_loss", test_loss, epoch)
+
+            # save the best model
+            if test_acc > best_acc:
+                best_acc = test_acc
+                state = {
+                    "epoch": epoch,
+                    "model": module_list[0].state_dict(),
+                    "best_acc": best_acc,
+                }
+                save_file = os.path.join(
+                    opt.save_folder, f"F{idx + 1}_{opt.model_s}_best.pth"
+                )
+                print(f"saving the best model with new acc {best_acc}")
+                torch.save(state, save_file)
+
+            # regular saving
+            if epoch % opt.save_freq == 0:
+                print("==> Saving...")
+                state = {
+                    "epoch": epoch,
+                    "model": module_list[0].state_dict(),
+                    "accuracy": test_acc,
+                }
+                save_file = os.path.join(
+                    opt.save_folder, f"F{idx + 1}_ckpt_epoch_{epoch}.pth"
+                )
+                torch.save(state, save_file)
+
+        # This best accuracy is only for printing purpose.
+        # The results reported in the paper/README is from the last epoch.
+        print(f"F{idx + 1}_best accuracy:{best_acc}")
+        results[idx + 1] = best_acc
+
+        # save model
+        state = {
+            "opt": opt,
+            "model": module_list[0].state_dict(),
+        }
+        save_file = os.path.join(opt.save_folder, f"F{idx + 1}{opt.model_s}_last.pth")
+        torch.save(state, save_file)
+
+    # Print final results
+    print(f"K-FOLD CROSS VALIDATION RESULTS FOR {k} FOLDS")
+    print("--------------------------------")
+    acc_sum = 0.0
+    for key, value in results.items():
+        print(f"Fold {key}: {value} %")
+        acc_sum += value
+    print(f"Average: {acc_sum / len(results.items())} %")
+    end_time = time.time()
+    print(time.strftime("%Hh:%Mm:%Ss", time.gmtime(end_time - start_time)))
+
+
+def hybird(opt, module_list, criterion_list, optimizer, logger):
+    best_acc = 0
+    criterion_cls = criterion_list[0]
+
+    train_loader, val_loader = oct2.get_hybird_dataloaders(
+        c_train=opt.train_dataset,
+        c_test=opt.test_dataset,
+        batch_size=opt.batch_size,
+        num_workers=opt.num_workers,
+    )
+    val_teacher(
+        val_loader=val_loader,
+        model_t=module_list[-1],
+        criterion_cls=criterion_cls,
+        opt=opt,
+    )
+    # add timer
+    print("==> Start training...")
+    start_time = time.time()
+    for epoch in range(1, opt.epochs + 1):
+
+        adjust_learning_rate(epoch, opt, optimizer)
+        print("-" * 25)
+        print("==> training...")
+
+        now_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        print(now_time)
+
+        time1 = time.time()
+        train_acc, train_loss = train(
+            epoch, train_loader, module_list, criterion_list, optimizer, opt
+        )
+        time2 = time.time()
+        print("epoch {}, total time {:.2f}".format(epoch, (time2 - time1) / 60))
+
+        logger.log_value(
+            f"TrainDS_{opt.train_dataset}_TestDS_{opt.test_dataset}_train_acc",
+            train_acc,
+            epoch,
+        )
+        logger.log_value(
+            f"TrainDS_{opt.train_dataset}_TestDS_{opt.test_dataset}_train_loss",
+            train_loss,
+            epoch,
+        )
+
+        test_acc, test_loss = validate(val_loader, module_list[0], criterion_cls, opt)
+
+        logger.log_value(
+            f"TrainDS_{opt.train_dataset}_TestDS_{opt.test_dataset}_test_acc",
+            test_acc,
+            epoch,
+        )
+        logger.log_value(
+            f"TrainDS_{opt.train_dataset}_TestDS_{opt.test_dataset}_test_loss",
+            test_loss,
+            epoch,
+        )
+
+        # save the best model
+        if test_acc > best_acc:
+            best_acc = test_acc
+            state = {
+                "epoch": epoch,
+                "model": module_list[0].state_dict(),
+                "best_acc": best_acc,
+            }
+            save_file = os.path.join(
+                opt.save_folder,
+                f"TrainDS_{opt.train_dataset}_TestDS_{opt.test_dataset}_{opt.model_s}_best.pth",
+            )
+            print("saving the best model with new acc {}".format(best_acc))
+            torch.save(state, save_file)
+
+        # regular saving
+        if epoch % opt.save_freq == 0:
+            print("==> Saving...")
+            state = {
+                "epoch": epoch,
+                "model": module_list[0].state_dict(),
+                "accuracy": test_acc,
+            }
+            save_file = os.path.join(
+                opt.save_folder,
+                f"TrainDS_{opt.train_dataset}_TestDS_{opt.test_dataset}_{opt.model_s}_ckpt_epoch_{epoch}.pth",
+            )
+            torch.save(state, save_file)
+
+    # This best accuracy is only for printing purpose.
+    # The results reported in the paper/README is from the last epoch.
+    print(
+        f"TrainDS_{opt.train_dataset}_TestDS_{opt.test_dataset}_{opt.model_s}_best accuracy:",
+        best_acc,
+    )
+
+    # save model
+    state = {
+        "opt": opt,
+        "model": module_list[0].state_dict(),
+    }
+    save_file = os.path.join(
+        opt.save_folder,
+        f"TrainDS_{opt.train_dataset}_TestDS_{opt.test_dataset}_{opt.model_s}_last.pth",
+    )
+    torch.save(state, save_file)
+    end_time = time.time()
+    print(time.strftime("%Hh:%Mm:%Ss", time.gmtime(end_time - start_time)))
 
 
 def val_teacher(val_loader, model_t, criterion_cls, opt):
